@@ -17,10 +17,10 @@ export function Hero() {
             </h1>
             <p style={{ margin: 0, maxWidth: 520, fontSize: 19 }}>{hero.intro}</p>
             <div className="chips" style={{ gap: 16 }}>
-              <a className="btn" href="#afspraak">
+              <a className="btn" href="#afspraak" data-panel="booking">
                 {t("nav.book")}
               </a>
-              <a className="btn ghost" href="#diensten" data-opensvc="">
+              <a className="btn ghost" href="#diensten" data-panel="services">
                 {t("nav.services")}
               </a>
             </div>

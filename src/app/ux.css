@@ -1,0 +1,81 @@
+/*
+ * ROTANA – UX additions (Single Active Panel).
+ *
+ * site.css stays a verbatim copy of the original; everything added for the
+ * panel behaviour lives here and only uses the original colour variables.
+ * Opening animations are the original ones ("rise" in site.css).
+ */
+
+/* Short exit animation while a panel closes. */
+@keyframes panel-out {
+  from {
+    opacity: 1;
+    transform: none;
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
+.js #svc-panel.closing {
+  display: block;
+  animation: panel-out 0.18s ease both;
+  pointer-events: none;
+}
+.js #werk-panel.closing {
+  display: flex !important;
+  animation: panel-out 0.18s ease both;
+  pointer-events: none;
+}
+
+/* Quick fade when the content inside a panel changes (services list, booking steps). */
+@keyframes view-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.js .view-enter {
+  animation: view-in 0.22s ease both;
+}
+
+/* Elements that receive focus from a link are not buttons: no focus ring for mouse users. */
+#svc-panel:focus:not(:focus-visible),
+#werk-panel:focus:not(:focus-visible),
+#book-title:focus:not(:focus-visible),
+.svc-head h3:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Previously chosen option when going back a booking step (kept choices stay visible). */
+.choice[aria-pressed="true"],
+.person[aria-pressed="true"] {
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+/* Notice when a kept time is no longer free. */
+.booking-notice {
+  border-left: 3px solid var(--accent);
+  padding: 10px 14px;
+  background: var(--surface);
+}
+
+/* While the lightbox is open, the page behind does not scroll. */
+body.lb-open {
+  overflow: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .js #svc-panel.closing,
+  .js #werk-panel.closing {
+    animation: none;
+  }
+  .js .view-enter {
+    animation: none;
+  }
+}

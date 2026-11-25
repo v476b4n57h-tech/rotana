@@ -4,61 +4,82 @@ import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { work, type Group, type WorkItem } from "@/content/rotana";
 import { t } from "@/i18n";
+import { panelClass, usePanels } from "./panels";
 
 type Filter = "all" | Group;
 
-/** "Ons werk": collapsible masonry gallery with filters and a lightbox. */
+/**
+ * "Ons werk": collapsible masonry gallery (one of the Single Active Panels)
+ * with filters and a lightbox. The lightbox is a modal layer on top of the
+ * gallery: while it is open, the rest of the page cannot be reached.
+ */
 export function Gallery() {
-  const [open, setOpen] = useState(false);
+  const { active, closing, open, close, lightbox, setLightbox } = usePanels();
+  const isOpen = active === "gallery";
   const [filter, setFilter] = useState<Filter>("all");
   const [shown, setShown] = useState<WorkItem[]>([]);
-  const [current, setCurrent] = useState<number | null>(null);
+  const [index, setIndex] = useState(0);
   const lastFocus = useRef<HTMLElement | null>(null);
   const closeButton = useRef<HTMLButtonElement>(null);
+  const toggle = useRef<HTMLButtonElement>(null);
 
-  const openLightbox = (item: WorkItem) => {
-    const list = work.filter((w) => filter === "all" || w.group === filter);
+  const item = lightbox ? shown[index] : undefined;
+
+  const openLightbox = (w: WorkItem) => {
+    const list = work.filter((x) => filter === "all" || x.group === filter);
     lastFocus.current = document.activeElement as HTMLElement | null;
     setShown(list);
-    setCurrent(list.indexOf(item));
+    setIndex(list.indexOf(w));
+    setLightbox(true);
   };
 
-  const closeLightbox = useCallback(() => {
-    setCurrent(null);
-    lastFocus.current?.focus();
-  }, []);
+  const closeLightbox = useCallback(() => setLightbox(false), [setLightbox]);
 
   const step = useCallback(
-    (delta: number) => setCurrent((i) => (i === null ? i : (i + delta + shown.length) % shown.length)),
+    (delta: number) => setIndex((i) => (i + delta + shown.length) % shown.length),
     [shown.length],
   );
 
+  // While the lightbox is open: focus it, block the page behind it, handle the keyboard.
   useEffect(() => {
-    if (current !== null) closeButton.current?.focus();
-  }, [current === null]); // eslint-disable-line react-hooks/exhaustive-deps
+    if (!lightbox) return;
+    closeButton.current?.focus({ preventScroll: true });
+    const behind = [
+      ...document.querySelectorAll<HTMLElement>("body > *:not(script), main > *:not(#lb)"),
+    ].filter((el) => !el.contains(document.getElementById("lb")));
+    behind.forEach((el) => (el.inert = true));
+    document.body.classList.add("lb-open");
 
-  // Keyboard: Escape closes, arrows step through the photos.
-  useEffect(() => {
-    if (current === null) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") closeLightbox();
-      else if (e.key === "ArrowLeft") step(-1);
+      if (e.key === "Escape") {
+        e.stopPropagation();
+        closeLightbox();
+      } else if (e.key === "ArrowLeft") step(-1);
       else if (e.key === "ArrowRight") step(1);
+      else if (e.key === "Tab") {
+        // Focus trap: Tab and Shift+Tab cycle through the lightbox buttons only.
+        const buttons = [...document.querySelectorAll<HTMLElement>("#lb button")];
+        const first = buttons[0];
+        const last = buttons[buttons.length - 1];
+        const inside = document.activeElement?.closest("#lb");
+        if (e.shiftKey && (document.activeElement === first || !inside)) {
+          e.preventDefault();
+          last?.focus();
+        } else if (!e.shiftKey && (document.activeElement === last || !inside)) {
+          e.preventDefault();
+          first?.focus();
+        }
+      }
     };
     document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [current, closeLightbox, step]);
-
-  // Any link to #werk opens the gallery panel.
-  useEffect(() => {
-    const onClick = (e: MouseEvent) => {
-      if ((e.target as Element | null)?.closest?.('a[href="#werk"]')) setOpen(true);
+    return () => {
+      behind.forEach((el) => (el.inert = false));
+      document.body.classList.remove("lb-open");
+      document.removeEventListener("keydown", onKey);
+      // Only now (page unlocked) can focus go back to the photo that opened the lightbox.
+      lastFocus.current?.focus({ preventScroll: true });
     };
-    document.addEventListener("click", onClick);
-    return () => document.removeEventListener("click", onClick);
-  }, []);
-
-  const item = current === null ? null : shown[current];
+  }, [lightbox, closeLightbox, step]);
 
   return (
     <>
@@ -66,23 +87,27 @@ export function Gallery() {
         <div className="wrap reveal" style={{ display: "flex", flexDirection: "column", gap: 28 }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             <div className="eyebrow">{t("work.eyebrow")}</div>
-            <h2>{t("work.title")}</h2>
+            <h2 id="werk-title">{t("work.title")}</h2>
           </div>
           <div id="werk-open-wrap">
             <button
+              ref={toggle}
               type="button"
               className="btn"
               id="werk-open"
-              aria-expanded={open}
+              aria-expanded={isOpen}
               aria-controls="werk-panel"
-              onClick={() => setOpen(!open)}
+              onClick={() => (isOpen ? close("gallery") : open("gallery", { anchor: toggle.current }))}
             >
-              {open ? t("common.close") : t("work.open")}
+              {isOpen ? t("common.close") : t("work.open")}
             </button>
           </div>
           <div
             id="werk-panel"
-            className={open ? "open" : undefined}
+            className={panelClass("gallery", active, closing)}
+            role="region"
+            aria-labelledby="werk-title"
+            tabIndex={-1}
             style={{ display: "flex", flexDirection: "column", gap: 28 }}
           >
             <div className="filters" role="group" aria-label={t("work.filterLabel")}>
@@ -127,7 +152,7 @@ export function Gallery() {
       <div
         className="lb"
         id="lb"
-        hidden={item === null}
+        hidden={!item}
         role="dialog"
         aria-modal="true"
         aria-label={t("work.lightboxLabel")}
@@ -163,7 +188,7 @@ export function Gallery() {
           &#8250;
         </button>
         <div className="lbc" id="lbc">
-          {item ? `${item.alt}  (${(current ?? 0) + 1}/${shown.length})` : ""}
+          {item ? `${item.alt}  (${index + 1}/${shown.length})` : ""}
         </div>
       </div>
     </>

@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Cormorant_Garamond, Jost } from "next/font/google";
 import "./globals.css";
 import "./site.css";
+import "./ux.css";
 
 // Same font families and weights as the original website, self-hosted by next/font.
 const display = Cormorant_Garamond({

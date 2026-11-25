@@ -60,7 +60,8 @@
     "confirm": "Afspraak bevestigen",
     "demoConfirmed": "Dit is een demo. Er is niets opgeslagen en er wordt geen bevestiging verstuurd. In het echte boekingssysteem krijgt de klant hier een bevestiging per e-mail.",
     "weekdays": "Zo,Ma,Di,Wo,Do,Vr,Za",
-    "months": "jan,feb,mrt,apr,mei,jun,jul,aug,sep,okt,nov,dec"
+    "months": "jan,feb,mrt,apr,mei,jun,jul,aug,sep,okt,nov,dec",
+    "timeUnavailable": "Het gekozen tijdstip ({time}) is niet beschikbaar bij {name} op deze dag. Kies een andere tijd."
   },
   "account": {
     "eyebrow": "Klanten",

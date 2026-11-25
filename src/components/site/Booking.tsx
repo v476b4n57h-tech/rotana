@@ -1,64 +1,103 @@
 "use client";
 
-import { useState } from "react";
-import { bookingDemo, people, services, type Group } from "@/content/rotana";
+import { useEffect, useReducer, useRef } from "react";
+import { people, services, type Group } from "@/content/rotana";
+import {
+  INITIAL,
+  STORAGE_KEY,
+  bookingReducer,
+  deserialize,
+  isTaken,
+  serialize,
+  timeSlots,
+  upcomingDays,
+  type Action,
+} from "@/features/booking/state";
 import { t } from "@/i18n";
 import { priceLabel } from "./priceLabel";
 
 /**
- * Booking DEMO, identical to the original: group → barber → treatment → day → time.
- * Nothing is saved. Real booking (database, conflict checks) arrives in phase 5.
+ * Booking DEMO: group → barber → treatment → day → time.
+ * Same look and texts as the original; choices are kept when going back a step
+ * and survive a page reload. Nothing is sent anywhere. Real booking arrives in phase 5.
  */
 
-interface State {
-  g: Group | null; // group
-  p: number | null; // barber index
-  s: number | null; // service index
-  d: number; // day index
-  t: string | null; // time slot
-  ok: boolean; // demo confirmation shown
-}
-
-const EMPTY: State = { g: null, p: null, s: null, d: 0, t: null, ok: false };
 const groupTitle = (g: Group) => t(`common.${g}`);
+const weekdays = t("booking.weekdays").split(",");
+const months = t("booking.months").split(",");
 
-function upcomingDays() {
-  const weekdays = t("booking.weekdays").split(",");
-  const months = t("booking.months").split(",");
-  const days: { dow: string; date: string }[] = [];
-  for (let k = 1; k <= bookingDemo.daysAhead; k++) {
-    const dt = new Date();
-    dt.setDate(dt.getDate() + k);
-    days.push({ dow: weekdays[dt.getDay()] ?? "", date: `${dt.getDate()} ${months[dt.getMonth()] ?? ""}` });
+const rowStyle = {
+  display: "flex",
+  flexWrap: "wrap",
+  alignItems: "center",
+  justifyContent: "space-between",
+  gap: 12,
+} as const;
+
+function readSaved() {
+  try {
+    return deserialize(sessionStorage.getItem(STORAGE_KEY));
+  } catch {
+    return null; // storage blocked (private mode, settings): just start fresh
   }
-  return days;
 }
-
-function timeSlots() {
-  const slots: string[] = [];
-  for (let i = 0; i < bookingDemo.slotCount; i++) {
-    const m = bookingDemo.firstSlotMinutes + bookingDemo.slotMinutes * i;
-    slots.push(`${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`);
-  }
-  return slots;
-}
-
-/** Demo only: a fixed pattern of "taken" slots, as in the original. */
-const isTaken = (barber: number, day: number, slot: number) =>
-  ((barber + 1) * 7 + day * 3 + slot * 5) % 4 === 0;
 
 export function Booking() {
-  const [st, setSt] = useState<State>(EMPTY);
+  const [st, dispatch] = useReducer(bookingReducer, INITIAL);
+  const restored = useRef(false);
+  const userAction = useRef(false);
+
+  // Restore saved choices after the page has loaded (storage only exists in the browser).
+  useEffect(() => {
+    const saved = readSaved();
+    if (saved) dispatch({ type: "restore", state: saved });
+    restored.current = true;
+  }, []);
+
+  // Save choices whenever they change.
+  useEffect(() => {
+    if (!restored.current) return;
+    try {
+      if (st.g === null) sessionStorage.removeItem(STORAGE_KEY);
+      else sessionStorage.setItem(STORAGE_KEY, serialize(st));
+    } catch {
+      /* storage unavailable: the booking still works, it is just not remembered */
+    }
+  }, [st]);
+
+  // After a step change made by the user: focus the step title, scroll it into view if needed.
+  useEffect(() => {
+    if (!userAction.current) return;
+    userAction.current = false;
+    const title = document.getElementById("book-title");
+    if (!title) return;
+    title.focus({ preventScroll: true });
+    if (title.getBoundingClientRect().top < 0) {
+      const reduce = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+      title.scrollIntoView({ behavior: reduce ? "instant" : "smooth", block: "start" });
+    }
+  }, [st.view]);
+
+  const act = (action: Action) => {
+    userAction.current = true;
+    dispatch(action);
+  };
 
   let title: string;
   let body: React.ReactNode;
 
-  if (!st.g) {
+  if (st.view === "group" || !st.g) {
     title = t("booking.titleWho");
     body = (
       <div className="row" style={{ gap: 24 }}>
         {(["men", "women"] as const).map((g) => (
-          <button key={g} type="button" className="choice" onClick={() => setSt({ ...EMPTY, g })}>
+          <button
+            key={g}
+            type="button"
+            className="choice"
+            aria-pressed={st.g === g ? true : undefined}
+            onClick={() => act({ type: "group", g })}
+          >
             <b>{groupTitle(g)}</b>
             <span>
               {t(g === "men" ? "booking.menChoice" : "booking.womenChoice", { count: people[g].length })}
@@ -67,22 +106,14 @@ export function Booking() {
         ))}
       </div>
     );
-  } else if (st.p === null) {
+  } else if (st.view === "barber" || st.p === null) {
     const g = st.g;
     title = t("booking.titleBarber", { group: groupTitle(g) });
     body = (
       <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-        <div
-          style={{
-            display: "flex",
-            flexWrap: "wrap",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: 12,
-          }}
-        >
+        <div style={rowStyle}>
           <div style={{ fontSize: 19 }}>{t("booking.chooseBarber")}</div>
-          <button type="button" className="small-btn" onClick={() => setSt(EMPTY)}>
+          <button type="button" className="small-btn" onClick={() => act({ type: "back", view: "group" })}>
             {t("common.otherChoice")}
           </button>
         </div>
@@ -92,7 +123,8 @@ export function Booking() {
               key={person.name}
               type="button"
               className="person"
-              onClick={() => setSt({ ...EMPTY, g, p: idx })}
+              aria-pressed={st.p === idx ? true : undefined}
+              onClick={() => act({ type: "barber", p: idx })}
             >
               <span className="avatar l" aria-hidden="true">
                 {person.name.charAt(0)}
@@ -105,24 +137,15 @@ export function Booking() {
         <div className="note">{t("booking.teamPhotosNote")}</div>
       </div>
     );
-  } else if (st.s === null) {
+  } else if (st.view === "service" || st.s === null) {
     const g = st.g;
-    const p = st.p;
-    const person = people[g][p]!;
+    const person = people[g][st.p]!;
     title = t("booking.titleTreatment", { group: groupTitle(g) });
     body = (
       <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-        <div
-          style={{
-            display: "flex",
-            flexWrap: "wrap",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: 12,
-          }}
-        >
+        <div style={rowStyle}>
           <div style={{ fontSize: 19 }}>{t("booking.whichTreatment", { name: person.name })}</div>
-          <button type="button" className="small-btn" onClick={() => setSt({ ...EMPTY, g })}>
+          <button type="button" className="small-btn" onClick={() => act({ type: "back", view: "barber" })}>
             {t("booking.otherBarber")}
           </button>
         </div>
@@ -133,7 +156,8 @@ export function Booking() {
               type="button"
               className="person"
               style={{ flexBasis: 240, textAlign: "left", alignItems: "flex-start" }}
-              onClick={() => setSt({ ...EMPTY, g, p, s: i })}
+              aria-pressed={st.s === i ? true : undefined}
+              onClick={() => act({ type: "service", s: i })}
             >
               <b style={{ fontSize: 24 }}>{service.name}</b>
               <span className="role">{service.description}</span>
@@ -148,23 +172,18 @@ export function Booking() {
   } else {
     const g = st.g;
     const p = st.p;
-    const s = st.s;
     const person = people[g][p]!;
-    const service = services[g][s]!;
+    const service = services[g][st.s]!;
     const days = upcomingDays();
     const day = days[st.d]!;
+    const label = (d: (typeof days)[number]) => ({
+      dow: weekdays[d.weekday] ?? "",
+      date: `${d.date} ${months[d.month] ?? ""}`,
+    });
     title = t("booking.titleTime", { group: groupTitle(g) });
     body = (
       <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>
-        <div
-          style={{
-            display: "flex",
-            flexWrap: "wrap",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: 16,
-          }}
-        >
+        <div style={{ ...rowStyle, gap: 16 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
             <span className="avatar s" aria-hidden="true">
               {person.name.charAt(0)}
@@ -177,10 +196,14 @@ export function Booking() {
             </div>
           </div>
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-            <button type="button" className="small-btn" onClick={() => setSt({ ...EMPTY, g })}>
+            <button type="button" className="small-btn" onClick={() => act({ type: "back", view: "barber" })}>
               {t("booking.otherBarber")}
             </button>
-            <button type="button" className="small-btn" onClick={() => setSt({ ...EMPTY, g, p })}>
+            <button
+              type="button"
+              className="small-btn"
+              onClick={() => act({ type: "back", view: "service" })}
+            >
               {t("booking.otherTreatment")}
             </button>
           </div>
@@ -193,14 +216,14 @@ export function Booking() {
           <div className="chips">
             {days.map((d, di) => (
               <button
-                key={d.date}
+                key={d.key}
                 type="button"
                 className={st.d === di ? "day on" : "day"}
                 aria-pressed={st.d === di}
-                onClick={() => setSt({ ...EMPTY, g, p, s, d: di })}
+                onClick={() => dispatch({ type: "day", d: di })}
               >
-                <span style={{ fontSize: 14 }}>{d.dow}</span>
-                <span style={{ fontWeight: 500 }}>{d.date}</span>
+                <span style={{ fontSize: 14 }}>{label(d).dow}</span>
+                <span style={{ fontWeight: 500 }}>{label(d).date}</span>
               </button>
             ))}
           </div>
@@ -215,7 +238,7 @@ export function Booking() {
                 className={st.t === slot ? "slot on" : "slot"}
                 disabled={isTaken(p, st.d, si)}
                 aria-pressed={st.t === slot}
-                onClick={() => setSt({ ...st, t: slot, ok: false })}
+                onClick={() => dispatch({ type: "time", t: slot })}
               >
                 {slot}
               </button>
@@ -223,6 +246,11 @@ export function Booking() {
           </div>
           <div className="note">{t("booking.takenNote")}</div>
         </div>
+        {st.notice?.type === "timeUnavailable" && (
+          <div className="booking-notice" role="status">
+            {t("booking.timeUnavailable", { name: person.name, time: st.notice.time })}
+          </div>
+        )}
         {st.t && (
           <div className="summary">
             <div style={{ flex: "1 1 300px", minWidth: 0 }}>
@@ -230,13 +258,13 @@ export function Booking() {
                 {t("booking.yourAppointment")}
               </div>
               <h3>
-                {service.name} · {groupTitle(g)} · {person.name} · {day.dow} {day.date} · {st.t}
+                {service.name} · {groupTitle(g)} · {person.name} · {label(day).dow} {label(day).date} · {st.t}
               </h3>
               <div style={{ marginTop: 6 }}>
                 {t("booking.price", { price: priceLabel(service.priceCents) })}
               </div>
             </div>
-            <button type="button" className="btn" onClick={() => setSt({ ...st, ok: true })}>
+            <button type="button" className="btn" onClick={() => dispatch({ type: "confirm" })}>
               {t("booking.confirm")}
             </button>
           </div>
@@ -251,11 +279,15 @@ export function Booking() {
       <div className="wrap reveal">
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           <div className="eyebrow">{t("booking.eyebrow")}</div>
-          <h2 id="book-title">{title}</h2>
+          <h2 id="book-title" tabIndex={-1}>
+            {title}
+          </h2>
           <div className="note">{t("booking.demoNote")}</div>
         </div>
         <div id="book" aria-live="polite">
-          {body}
+          <div key={st.view} className="view-enter">
+            {body}
+          </div>
         </div>
       </div>
     </section>

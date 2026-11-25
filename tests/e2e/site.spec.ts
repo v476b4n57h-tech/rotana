@@ -61,7 +61,7 @@ test("services panel: open, choose men/women, go back, close", async ({ page }) 
 
 test("hero link 'Diensten en prijzen' opens the services panel", async ({ page }) => {
   await page.goto("/");
-  await page.locator(".hero a[data-opensvc]").click();
+  await page.locator('.hero a[data-panel="services"]').click();
   await expect(page.locator("#svc-panel")).toBeVisible();
   await expect(page).toHaveURL(/#diensten$/);
 });

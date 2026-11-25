@@ -13,15 +13,17 @@ export function Header() {
           <span aria-hidden="true">OTANA</span>
         </div>
         <nav aria-label={t("nav.label")}>
-          {/* data-opensvc: opens the services panel (handled in Services.tsx) */}
-          <a href="#diensten" data-opensvc="">
+          {/* data-panel: opens that panel and closes any other (see panels.tsx) */}
+          <a href="#diensten" data-panel="services">
             {t("nav.services")}
           </a>
           <a href="#over-ons">{t("nav.about")}</a>
-          <a href="#werk">{t("nav.work")}</a>
+          <a href="#werk" data-panel="gallery">
+            {t("nav.work")}
+          </a>
           <a href="#contact">{t("nav.contact")}</a>
           <a href="#account">{t("nav.account")}</a>
-          <a className="btn" href="#afspraak">
+          <a className="btn" href="#afspraak" data-panel="booking">
             {t("nav.book")}
           </a>
         </nav>

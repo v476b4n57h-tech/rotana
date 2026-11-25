@@ -1,28 +1,40 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { serviceGroups, services, servicesNote, type Group } from "@/content/rotana";
 import { t } from "@/i18n";
+import { panelClass, usePanels } from "./panels";
 import { priceLabel } from "./priceLabel";
 
-/** Services and prices: a collapsible panel with a men/women choice, as in the original. */
+/** Services and prices: a collapsible panel with a men/women choice (one of the Single Active Panels). */
 export function Services() {
-  const [open, setOpen] = useState(false);
+  const { active, closing, open, close } = usePanels();
+  const isOpen = active === "services";
   const [which, setWhich] = useState<Group | null>(null);
+  const [prevOpen, setPrevOpen] = useState(isOpen);
+  const focusAfterSwitch = useRef(false);
+  const toggle = useRef<HTMLButtonElement>(null);
 
-  const openPanel = (value: boolean) => {
-    setOpen(value);
-    if (value) setWhich(null);
+  // Every time the panel opens it starts at the men/women choice (as in the original).
+  if (isOpen !== prevOpen) {
+    setPrevOpen(isOpen);
+    if (isOpen) setWhich(null);
+  }
+
+  const show = (group: Group | null) => {
+    focusAfterSwitch.current = true;
+    setWhich(group);
   };
 
-  // Links marked with data-opensvc (header, hero) open the panel.
+  // Inside the panel, move focus to the newly shown view (keyboard and screen readers).
   useEffect(() => {
-    const onClick = (e: MouseEvent) => {
-      if ((e.target as Element | null)?.closest?.("[data-opensvc]")) openPanel(true);
-    };
-    document.addEventListener("click", onClick);
-    return () => document.removeEventListener("click", onClick);
-  }, []);
+    if (!focusAfterSwitch.current) return;
+    focusAfterSwitch.current = false;
+    const target = which
+      ? document.querySelector<HTMLElement>(`#svc-${which} .svc-head h3`)
+      : document.querySelector<HTMLElement>("#svc-choose .choice");
+    target?.focus({ preventScroll: true });
+  }, [which]);
 
   return (
     <section id="diensten">
@@ -33,25 +45,32 @@ export function Services() {
         </div>
         <div id="svc-open-wrap">
           <button
+            ref={toggle}
             type="button"
             className="btn"
             id="svc-open"
-            aria-expanded={open}
+            aria-expanded={isOpen}
             aria-controls="svc-panel"
-            onClick={() => openPanel(!open)}
+            onClick={() => (isOpen ? close("services") : open("services", { anchor: toggle.current }))}
           >
-            {open ? t("common.close") : t("services.open")}
+            {isOpen ? t("common.close") : t("services.open")}
           </button>
         </div>
-        <div id="svc-panel" className={open ? "open" : undefined}>
-          <div id="svc-choose" className="row" style={{ gap: 24 }} hidden={which !== null}>
+        <div
+          id="svc-panel"
+          className={panelClass("services", active, closing)}
+          role="region"
+          aria-labelledby="svc-title"
+          tabIndex={-1}
+        >
+          <div id="svc-choose" className="row view-enter" style={{ gap: 24 }} hidden={which !== null}>
             {(["men", "women"] as const).map((group) => (
               <button
                 key={group}
                 type="button"
                 className="choice"
                 data-svc={group}
-                onClick={() => setWhich(group)}
+                onClick={() => show(group)}
               >
                 <b>{serviceGroups[group].title}</b>
                 <span>{serviceGroups[group].summary}</span>
@@ -59,10 +78,15 @@ export function Services() {
             ))}
           </div>
           {(["men", "women"] as const).map((group) => (
-            <div key={group} id={`svc-${group}`} className="svc-list" hidden={which !== group}>
+            <div
+              key={which === group ? `${group}-shown` : group}
+              id={`svc-${group}`}
+              className="svc-list view-enter"
+              hidden={which !== group}
+            >
               <div className="svc-head">
-                <h3>{serviceGroups[group].title}</h3>
-                <button type="button" className="small-btn" data-svc="back" onClick={() => setWhich(null)}>
+                <h3 tabIndex={-1}>{serviceGroups[group].title}</h3>
+                <button type="button" className="small-btn" data-svc="back" onClick={() => show(null)}>
                   {t("common.otherChoice")}
                 </button>
               </div>
