@@ -29,7 +29,7 @@ export async function openVersion(
     const type = rel.endsWith(".css") ? "text/css" : rel.endsWith(".woff2") ? "font/woff2" : "font/ttf";
     return route.fulfill({ body: readFileSync(path.join(FA_LOCAL, rel)), contentType: type });
   });
-  if (version === "original") await useSameFontFiles(page, opts.baseURL);
+  if (version === "original") await serveSameFontFiles(page, opts.baseURL);
   await page.clock.setFixedTime(FIXED_NOW);
   // Reduced motion freezes the animations (both versions respect it), giving stable screenshots.
   await page.emulateMedia({ reducedMotion: "reduce", colorScheme: opts.colorScheme });
@@ -48,7 +48,7 @@ export async function openVersion(
 const FONT_HOST = "https://fonts.gstatic.com/__rotana__/";
 let fontCss: string | undefined;
 
-async function useSameFontFiles(page: Page, baseURL: string) {
+async function serveSameFontFiles(page: Page, baseURL: string) {
   if (!fontCss) {
     const html = await (await fetch(baseURL)).text();
     const faces = html.match(/@font-face\{[^}]*\}/g) ?? [];
