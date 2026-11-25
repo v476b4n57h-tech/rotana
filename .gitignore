@@ -1,0 +1,27 @@
+# afhankelijkheden
+node_modules/
+
+# Next.js
+.next/
+out/
+next-env.d.ts
+*.tsbuildinfo
+
+# tests
+playwright-report/
+test-results/
+coverage/
+
+# geheime sleutels: nooit in git
+.env
+.env.local
+.env.*.local
+
+# Supabase lokaal
+supabase/.branches/
+supabase/.temp/
+
+# systeem
+.DS_Store
+*.log
+.vercel

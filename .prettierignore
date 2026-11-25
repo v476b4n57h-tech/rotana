@@ -1,0 +1,11 @@
+# De originele website blijft byte-voor-byte ongewijzigd.
+index.html
+.next
+node_modules
+package-lock.json
+playwright-report
+test-results
+# Letterlijk overgenomen uit het origineel; niet laten herformatteren.
+src/app/globals.css
+# Gegenereerd door de Supabase CLI
+supabase/config.jsonc
