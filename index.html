@@ -145,6 +145,11 @@ nav a:not(.btn){color:var(--fg);text-decoration:none;padding:10px 0}
 .lb .lbc{position:absolute;bottom:18px;left:0;right:0;text-align:center;color:#E6D6B8;font-size:15px}
 @media (prefers-reduced-motion:reduce){.tile img,.tile .cap{transition:none}}
 
+.js #werk-panel{display:none!important}
+.js #werk-panel.open{display:flex!important;animation:rise .6s ease both}
+#werk-open-wrap{display:none}
+.js #werk-open-wrap{display:block}
+
 /* booking */
 #afspraak .wrap{display:flex;flex-direction:column;gap:28px}
 .choice{flex:1 1 300px;min-width:0;min-height:190px;text-align:left;background:var(--surface);border:1px solid var(--line);padding:30px;display:flex;flex-direction:column;justify-content:space-between;gap:20px;cursor:pointer}
@@ -288,6 +293,8 @@ nav a:not(.btn){color:var(--fg);text-decoration:none;padding:10px 0}
       <div class="eyebrow">Ons werk</div>
       <h2>Een greep uit ons werk</h2>
     </div>
+    <div id="werk-open-wrap"><button type="button" class="btn" id="werk-open" aria-expanded="false" aria-controls="werk-panel">Bekijk ons werk</button></div>
+    <div id="werk-panel" style="display:flex;flex-direction:column;gap:28px">
     <div class="filters" role="group" aria-label="Filter werk">
       <button type="button" class="on" data-f="all" aria-pressed="true">Alles</button>
       <button type="button" data-f="men" aria-pressed="false">Heren</button>
@@ -295,6 +302,7 @@ nav a:not(.btn){color:var(--fg);text-decoration:none;padding:10px 0}
     </div>
     <div class="masonry" id="masonry"></div>
     <div class="note">[Tijdelijke voorbeeldfoto's. Vervang ze door eigen foto's van ons werk voordat de website live gaat.]</div>
+    </div>
   </div>
 </section>
 
@@ -452,6 +460,16 @@ nav a:not(.btn){color:var(--fg);text-decoration:none;padding:10px 0}
       document.querySelectorAll('.filters button').forEach(function (x) { var on = x === fb; x.classList.toggle('on', on); x.setAttribute('aria-pressed', on); });
       mas.querySelectorAll('.tile').forEach(function (t) { t.classList.toggle('gone', curF !== 'all' && t.getAttribute('data-cat') !== curF); });
     });
+  });
+  var wp = document.getElementById('werk-panel'), wb = document.getElementById('werk-open');
+  wb.addEventListener('click', function () {
+    var o = !wp.classList.contains('open');
+    wp.classList.toggle('open', o);
+    wb.setAttribute('aria-expanded', o);
+    wb.textContent = o ? 'Sluiten' : 'Bekijk ons werk';
+  });
+  document.querySelectorAll('a[href="#werk"]').forEach(function (a) {
+    a.addEventListener('click', function () { if (!wp.classList.contains('open')) wb.click(); });
   });
   var rot = document.getElementById('rot');
   if (rot && !still) {
