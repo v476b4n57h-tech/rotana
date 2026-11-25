@@ -5,8 +5,8 @@ import { createServerClient } from "@supabase/ssr";
 import { requireSupabaseEnv } from "@/lib/env";
 
 /**
- * Supabase-verbinding op de server, namens de ingelogde gebruiker (via cookies).
- * RLS geldt hier gewoon: de gebruiker ziet alleen wat hij mag zien.
+ * Supabase client on the server, acting as the signed-in user (via cookies).
+ * RLS still applies: users only see what they are allowed to see.
  */
 export async function createSupabaseServerClient() {
   const { url, anonKey } = requireSupabaseEnv();
@@ -23,8 +23,8 @@ export async function createSupabaseServerClient() {
             cookieStore.set(name, value, options);
           }
         } catch {
-          // Aangeroepen vanuit een Server Component: cookies kunnen daar niet worden gezet.
-          // De middleware (fase 4) ververst de sessie.
+          // Called from a Server Component, where cookies cannot be set.
+          // The middleware (phase 4) refreshes the session.
         }
       },
     },

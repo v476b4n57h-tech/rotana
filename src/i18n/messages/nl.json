@@ -1,5 +1,87 @@
 {
-  "home": {
-    "underConstruction": "De nieuwe website wordt opgebouwd."
+  "nav": {
+    "label": "Hoofdmenu",
+    "services": "Diensten en prijzen",
+    "about": "Over ons",
+    "work": "Ons werk",
+    "contact": "Contact",
+    "account": "Mijn account",
+    "book": "Afspraak maken"
+  },
+  "common": {
+    "close": "Sluiten",
+    "otherChoice": "Andere keuze",
+    "men": "Heren",
+    "women": "Dames",
+    "pricePlaceholder": "[€ PRIJS]"
+  },
+  "mood": {
+    "sectionLabel": "Sfeerbeelden",
+    "chooseImage": "Kies afbeelding {group}",
+    "image": "Afbeelding {n}"
+  },
+  "services": {
+    "eyebrow": "Diensten en prijzen",
+    "title": "Diensten en prijzen",
+    "open": "Bekijk diensten en prijzen"
+  },
+  "work": {
+    "eyebrow": "Ons werk",
+    "title": "Een greep uit ons werk",
+    "open": "Bekijk ons werk",
+    "filterLabel": "Filter werk",
+    "all": "Alles",
+    "viewPhoto": "Bekijk foto: {alt}",
+    "note": "[Tijdelijke voorbeeldfoto's. Vervang ze door eigen foto's van ons werk voordat de website live gaat.]",
+    "lightboxLabel": "Foto bekijken",
+    "previous": "Vorige foto",
+    "next": "Volgende foto"
+  },
+  "booking": {
+    "eyebrow": "Afspraak maken",
+    "demoNote": "Voorbeeld: namen, foto's en tijden zijn verzonnen en dienen alleen om de werking te laten zien.",
+    "titleWho": "Voor wie is de afspraak?",
+    "menChoice": "Knippen, baard en verzorging. {count} kappers.",
+    "womenChoice": "Knippen, kleuren en stylen. {count} kappers.",
+    "titleBarber": "{group}: kies je kapper",
+    "chooseBarber": "Kies je kapper",
+    "teamPhotosNote": "[Hier komen later de echte foto's van het team.]",
+    "titleTreatment": "{group}: kies je behandeling",
+    "whichTreatment": "Welke behandeling wil je bij {name}?",
+    "otherBarber": "Andere kapper",
+    "titleTime": "{group}: kies een tijd",
+    "otherTreatment": "Andere behandeling",
+    "treatment": "Behandeling:",
+    "chooseDay": "Kies een dag",
+    "availableTimes": "Beschikbare tijden",
+    "takenNote": "Doorgestreepte tijden zijn al bezet.",
+    "yourAppointment": "Jouw afspraak",
+    "price": "Prijs: {price}",
+    "confirm": "Afspraak bevestigen",
+    "demoConfirmed": "Dit is een demo. Er is niets opgeslagen en er wordt geen bevestiging verstuurd. In het echte boekingssysteem krijgt de klant hier een bevestiging per e-mail.",
+    "weekdays": "Zo,Ma,Di,Wo,Do,Vr,Za",
+    "months": "jan,feb,mrt,apr,mei,jun,jul,aug,sep,okt,nov,dec"
+  },
+  "account": {
+    "eyebrow": "Klanten",
+    "title": "Mijn account",
+    "intro": "Met een account beheer je je afspraken en boek je sneller opnieuw. Het account wordt aangemaakt in ons boekingssysteem.",
+    "create": "Account maken",
+    "login": "Inloggen",
+    "note": "[Link naar het boekingssysteem volgt zodra dat is ingesteld.] Je gegevens worden verwerkt volgens onze privacyverklaring [LINK].",
+    "demoNote": "Dit is een demo: de link naar het boekingssysteem volgt. Er is nog geen account aangemaakt en er zijn geen gegevens opgeslagen."
+  },
+  "contact": {
+    "title": "Contact",
+    "phone": "Telefoon:",
+    "email": "E-mail:",
+    "follow": "Volg ons",
+    "socialNote": "[Links naar onze accounts volgen.]",
+    "socialDemo": "Dit is een demo: de link naar {name} volgt.",
+    "hours": "Openingstijden"
+  },
+  "footer": {
+    "privacy": "Privacyverklaring",
+    "terms": "Algemene voorwaarden"
   }
 }

@@ -5,7 +5,7 @@ const config = [
   ...nextVitals,
   ...nextTs,
   {
-    // index.html is de originele statische website (v0-static-demo) en blijft ongewijzigd.
+    // index.html is the original static website (v0-static-demo) and stays untouched.
     ignores: [
       ".next/**",
       "node_modules/**",

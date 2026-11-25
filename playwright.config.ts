@@ -1,5 +1,6 @@
 import { defineConfig, devices } from "@playwright/test";
 
+/** Behaviour tests of the new site on desktop, tablet and mobile. Run after `npm run build`. */
 const PORT = 3100;
 
 export default defineConfig({
@@ -12,7 +13,8 @@ export default defineConfig({
   },
   projects: [
     { name: "desktop", use: { ...devices["Desktop Chrome"] } },
-    { name: "mobiel", use: { ...devices["Pixel 7"] } },
+    { name: "tablet", use: { ...devices["Galaxy Tab S4"] } },
+    { name: "mobile", use: { ...devices["Pixel 7"] } },
   ],
   webServer: {
     command: `npm run start -- --port ${PORT}`,

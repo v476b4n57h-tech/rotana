@@ -1,13 +1,13 @@
 /**
- * Geldbedragen worden ALTIJD als hele centen (integer) opgeslagen en berekend.
- * Voorbeeld: € 25,00 = 2500. Zo ontstaan geen afrondingsfouten.
+ * Money is ALWAYS stored and calculated as whole cents (integers).
+ * Example: € 25,00 = 2500. This avoids rounding errors.
  */
 
 export type Cents = number;
 
 export function assertCents(value: number): asserts value is Cents {
   if (!Number.isSafeInteger(value)) {
-    throw new Error(`Bedrag moet een geheel aantal centen zijn, kreeg: ${value}`);
+    throw new Error(`Amount must be a whole number of cents, got: ${value}`);
   }
 }
 

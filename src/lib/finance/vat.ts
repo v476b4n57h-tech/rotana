@@ -1,31 +1,31 @@
 /**
- * BTW-berekeningen.
+ * VAT (BTW) calculations.
  *
- * Tarieven staan NIET vast in de code: ze worden later per salon in de database
- * beheerd (met een geldig-vanaf-datum), omdat tarieven kunnen veranderen.
- * Een tarief wordt uitgedrukt in basispunten: 21% = 2100, 9% = 900.
+ * Rates are NOT hard-coded: they will be managed per salon in the database (with
+ * a valid-from date), because rates can change.
+ * A rate is expressed in basis points: 21% = 2100, 9% = 900.
  */
 import { assertCents, type Cents } from "./money";
 
 export type BasisPoints = number;
 
 export interface VatSplit {
-  gross: Cents; // bedrag inclusief BTW (wat de klant betaalt)
-  net: Cents; // bedrag exclusief BTW
-  vat: Cents; // BTW-bedrag
+  gross: Cents; // amount including VAT (what the customer pays)
+  net: Cents; // amount excluding VAT
+  vat: Cents; // VAT amount
 }
 
-/** Splitst een bedrag inclusief BTW in netto + BTW. Afronding: rekenkundig op hele centen. */
+/** Splits a VAT-inclusive amount into net + VAT, rounded to whole cents. */
 export function splitGross(gross: Cents, rate: BasisPoints): VatSplit {
   assertCents(gross);
-  if (!Number.isInteger(rate) || rate < 0) throw new Error(`Ongeldig BTW-tarief: ${rate}`);
+  if (!Number.isInteger(rate) || rate < 0) throw new Error(`Invalid VAT rate: ${rate}`);
   const net = Math.round((gross * 10000) / (10000 + rate));
   return { gross, net, vat: gross - net };
 }
 
-/** Berekent een percentage (in basispunten) van een bedrag, bijv. de commissie van een kapper. */
+/** Percentage (in basis points) of an amount, e.g. a barber's commission. */
 export function percentageOf(amount: Cents, rate: BasisPoints): Cents {
   assertCents(amount);
-  if (!Number.isInteger(rate) || rate < 0 || rate > 10000) throw new Error(`Ongeldig percentage: ${rate}`);
+  if (!Number.isInteger(rate) || rate < 0 || rate > 10000) throw new Error(`Invalid percentage: ${rate}`);
   return Math.round((amount * rate) / 10000);
 }

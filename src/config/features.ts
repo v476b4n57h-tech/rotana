@@ -1,9 +1,9 @@
 /**
- * Functieschakelaars (feature flags).
+ * Feature flags.
  *
- * Elke grote functie kan aan of uit, zonder code te verwijderen. Nu staan ze in
- * de code; vanaf fase 2 komen ze per salon in de database (tabel salon_features),
- * zodat elke salon zijn eigen pakket kan hebben (belangrijk voor SaaS).
+ * Every major feature can be switched on or off without deleting code. They live
+ * in code for now; from phase 2 they move to the database per salon (table
+ * salon_features), so each salon can have its own package (important for SaaS).
  */
 export const features = {
   onlineBooking: true,
@@ -11,10 +11,10 @@ export const features = {
   staffAccounts: true,
   finance: true,
   multiBranch: true,
-  onlinePayments: false, // uitgesteld naar een latere fase
-  loyaltyCards: false, // toekomst
-  vipTiers: false, // toekomst
-  coupons: false, // toekomst
+  onlinePayments: false, // postponed to a later phase
+  loyaltyCards: false, // future
+  vipTiers: false, // future
+  coupons: false, // future
 } as const;
 
 export type FeatureKey = keyof typeof features;

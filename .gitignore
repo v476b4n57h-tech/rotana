@@ -1,4 +1,4 @@
-# afhankelijkheden
+# dependencies
 node_modules/
 
 # Next.js
@@ -12,16 +12,16 @@ playwright-report/
 test-results/
 coverage/
 
-# geheime sleutels: nooit in git
+# secrets: never in git
 .env
 .env.local
 .env.*.local
 
-# Supabase lokaal
+# Supabase (local)
 supabase/.branches/
 supabase/.temp/
 
-# systeem
+# system
 .DS_Store
 *.log
 .vercel

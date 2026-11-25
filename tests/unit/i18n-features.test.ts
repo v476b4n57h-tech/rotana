@@ -2,23 +2,29 @@ import { describe, expect, it } from "vitest";
 import { defaultLocale, locales, t } from "@/i18n";
 import { features, isEnabled } from "@/config/features";
 
-describe("taal", () => {
-  it("Nederlands is de standaardtaal", () => {
+describe("language", () => {
+  it("Dutch is the default locale", () => {
     expect(defaultLocale).toBe("nl");
     expect(locales).toContain("nl");
   });
 
-  it("vertaalt een sleutel", () => {
-    expect(t("home.underConstruction")).toBe("De nieuwe website wordt opgebouwd.");
+  it("translates a key", () => {
+    expect(t("nav.book")).toBe("Afspraak maken");
+  });
+
+  it("fills in placeholders", () => {
+    expect(t("contact.socialDemo", { name: "Instagram" })).toBe(
+      "Dit is een demo: de link naar Instagram volgt.",
+    );
   });
 });
 
-describe("functieschakelaars", () => {
-  it("online betalen is uitgesteld", () => {
+describe("feature flags", () => {
+  it("online payments are postponed", () => {
     expect(isEnabled("onlinePayments")).toBe(false);
   });
 
-  it("toekomstige functies staan klaar maar uit", () => {
+  it("future features exist but are switched off", () => {
     expect(features.loyaltyCards).toBe(false);
     expect(features.vipTiers).toBe(false);
     expect(features.coupons).toBe(false);

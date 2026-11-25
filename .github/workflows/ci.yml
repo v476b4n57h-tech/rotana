@@ -1,5 +1,5 @@
-# Automatische controle bij elke push en pull request:
-# codekwaliteit, types, opmaak, unit-tests, build en browsertests.
+# Automatic checks on every push and pull request:
+# code quality, types, formatting, unit tests, build, browser and visual tests.
 name: CI
 
 on:
@@ -29,3 +29,14 @@ jobs:
       - run: npm run test:e2e
         env:
           CI: "true"
+      # Pixel comparison with the original index.html (fonts load from Google Fonts like the original).
+      - run: npm run test:visual
+        env:
+          CI: "true"
+      - name: Upload comparison screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-comparison
+          path: test-results/visual
+          retention-days: 14

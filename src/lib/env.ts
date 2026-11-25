@@ -1,10 +1,9 @@
 import { z } from "zod";
 
 /**
- * Controle van omgevingsvariabelen. Een ontbrekende of foute waarde geeft een
- * duidelijke foutmelding in plaats van vreemd gedrag later.
- * Supabase is in fase 0 nog niet gekoppeld, dus de waarden zijn hier nog optioneel;
- * vanaf fase 2 worden ze verplicht.
+ * Environment variable validation. A missing or invalid value gives a clear
+ * error instead of strange behaviour later. Supabase is not connected yet, so
+ * the values are optional for now; from phase 2 they become required.
  */
 const publicSchema = z.object({
   NEXT_PUBLIC_SUPABASE_URL: z.url().optional(),
@@ -22,7 +21,7 @@ export function requireSupabaseEnv() {
   const env = getPublicEnv();
   if (!env.NEXT_PUBLIC_SUPABASE_URL || !env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
     throw new Error(
-      "Supabase is nog niet ingesteld. Vul NEXT_PUBLIC_SUPABASE_URL en NEXT_PUBLIC_SUPABASE_ANON_KEY in (zie .env.example).",
+      "Supabase is not configured yet. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY (see .env.example).",
     );
   }
   return { url: env.NEXT_PUBLIC_SUPABASE_URL, anonKey: env.NEXT_PUBLIC_SUPABASE_ANON_KEY };

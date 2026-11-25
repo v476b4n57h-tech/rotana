@@ -1,8 +1,7 @@
 import type { NextConfig } from "next";
 
-// Basis-beveiligingsheaders voor elke pagina.
-// Een strikte Content-Security-Policy volgt in de lanceringsfase (fase 8),
-// zodra alle externe bronnen (Supabase, Turnstile) bekend zijn.
+// Basic security headers for every page. A strict Content-Security-Policy follows
+// in the launch phase (phase 8), once all external sources (Supabase, Turnstile) are known.
 const securityHeaders = [
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "X-Frame-Options", value: "DENY" },
@@ -13,6 +12,15 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   reactStrictMode: true,
+  experimental: {
+    // Inline the (small) stylesheet into the HTML: one network round-trip less before the first paint.
+    inlineCss: true,
+  },
+  images: {
+    // Serve modern formats (AVIF, then WebP) at the size each device needs.
+    formats: ["image/avif", "image/webp"],
+    qualities: [75, 85],
+  },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },

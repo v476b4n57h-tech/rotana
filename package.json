@@ -2,7 +2,7 @@
   "name": "rotana",
   "version": "0.1.0",
   "private": true,
-  "description": "ROTANA Hair Style – salonwebsite en boekingssysteem (Next.js + Supabase)",
+  "description": "ROTANA Hair Style \u2013 salonwebsite en boekingssysteem (Next.js + Supabase)",
   "engines": {
     "node": ">=22"
   },
@@ -17,9 +17,11 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
-    "check": "npm run lint && npm run typecheck && npm run format:check && npm run test && npm run build"
+    "check": "npm run lint && npm run typecheck && npm run format:check && npm run test && npm run build && npm run test:e2e && npm run test:visual",
+    "test:visual": "playwright test -c playwright.visual.config.ts"
   },
   "dependencies": {
+    "@fortawesome/free-brands-svg-icons": "6.4.0",
     "@supabase/ssr": "0.12.7",
     "@supabase/supabase-js": "2.119.2",
     "next": "16.4.6",
@@ -29,12 +31,16 @@
     "zod": "4.6.7"
   },
   "devDependencies": {
+    "@fortawesome/fontawesome-free": "6.4.0",
     "@playwright/test": "1.63.0",
     "@types/node": "22.20.7",
+    "@types/pngjs": "6.0.5",
     "@types/react": "19.3.3",
     "@types/react-dom": "19.3.0",
     "eslint": "9.39.5",
     "eslint-config-next": "16.4.6",
+    "pixelmatch": "7.2.0",
+    "pngjs": "7.0.0",
     "prettier": "3.10.1",
     "typescript": "5.9.3",
     "vitest": "5.1.2"
