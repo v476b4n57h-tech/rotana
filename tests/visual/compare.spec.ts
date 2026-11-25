@@ -9,7 +9,7 @@
  */
 import { mkdirSync, writeFileSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
-import { compare, openVersion, settle, waitForScrollIdle } from "./harness";
+import { compare, diffBands, fontReport, openVersion, settle, waitForScrollIdle } from "./harness";
 
 const OUT = "test-results/visual";
 const MAX_FULL_PAGE_DIFF = 0.005; // 0.5% of pixels
@@ -86,6 +86,8 @@ for (const [device, viewport] of Object.entries(VIEWPORTS)) {
         const context = await browser.newContext({ viewport, deviceScaleFactor: 1 });
         const page = await context.newPage();
         await openVersion(page, version, { colorScheme, baseURL: baseURL! });
+        if (device === "mobile" && colorScheme === "light")
+          console.log(`fonts ${version}: ${await fontReport(page)}`);
         const png = await shoot(page, true);
         writeFileSync(`${OUT}/${device}-${colorScheme}-${version}.png`, png);
         shots.push(png);
@@ -94,6 +96,7 @@ for (const [device, viewport] of Object.entries(VIEWPORTS)) {
       const result = compare(shots[0]!, shots[1]!);
       writeFileSync(`${OUT}/${device}-${colorScheme}-diff.png`, result.diffPng);
       console.log(`${device} ${colorScheme}: ${(result.ratio * 100).toFixed(3)}% different pixels`);
+      console.log(`  where: ${diffBands(result.diffPng)}`);
       expect(result.heightB, "page height").toBe(result.heightA);
       expect(result.ratio).toBeLessThan(MAX_FULL_PAGE_DIFF);
     });

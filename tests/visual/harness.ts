@@ -110,3 +110,43 @@ export async function waitForScrollIdle(page: Page) {
       }),
   );
 }
+
+/** Diagnostics: which font files a page loaded (helps explain rendering differences). */
+export async function fontReport(page: Page): Promise<string> {
+  return page.evaluate(() => {
+    const faces = [...document.fonts]
+      .filter((f) => f.status === "loaded")
+      .map((f) => `${f.family} ${f.weight}`)
+      .sort();
+    const files = performance
+      .getEntriesByType("resource")
+      .map((e) => e.name)
+      .filter((n) => /\.(woff2?|ttf)(\?|$)/.test(n))
+      .map((n) => n.split("/").pop());
+    return `faces=[${[...new Set(faces)].join(", ")}] files=[${files.join(", ")}]`;
+  });
+}
+
+/** Diagnostics: the horizontal bands of the page where differing pixels are concentrated. */
+export function diffBands(diffPng: Buffer, top = 6): string {
+  const img = PNG.sync.read(diffPng);
+  const rows: number[] = [];
+  for (let y = 0; y < img.height; y++) {
+    let count = 0;
+    for (let x = 0; x < img.width; x++) {
+      const i = (y * img.width + x) * 4;
+      if (img.data[i] === 255 && img.data[i + 1] === 0 && img.data[i + 2] === 0) count++;
+    }
+    rows.push(count);
+  }
+  const bands: { from: number; to: number; px: number }[] = [];
+  for (let y = 0; y < rows.length; y += 50) {
+    const px = rows.slice(y, y + 50).reduce((a, b) => a + b, 0);
+    if (px) bands.push({ from: y, to: Math.min(y + 49, rows.length - 1), px });
+  }
+  return bands
+    .sort((a, b) => b.px - a.px)
+    .slice(0, top)
+    .map((b) => `y${b.from}-${b.to}:${b.px}px`)
+    .join(" ");
+}
