@@ -29,12 +29,46 @@ export async function openVersion(
     const type = rel.endsWith(".css") ? "text/css" : rel.endsWith(".woff2") ? "font/woff2" : "font/ttf";
     return route.fulfill({ body: readFileSync(path.join(FA_LOCAL, rel)), contentType: type });
   });
+  if (version === "original") await useSameFontFiles(page, opts.baseURL);
   await page.clock.setFixedTime(FIXED_NOW);
   // Reduced motion freezes the animations (both versions respect it), giving stable screenshots.
   await page.emulateMedia({ reducedMotion: "reduce", colorScheme: opts.colorScheme });
   const url = version === "original" ? `file://${path.join(ROOT, "index.html")}` : opts.baseURL;
   await page.goto(url, { waitUntil: "load" });
   await settle(page);
+}
+
+/**
+ * Google Fonts serves the latest version of each font file, which changes over
+ * time and can differ between machines. The new site self-hosts a fixed copy.
+ * To compare the implementation (not Google's font updates), the original page
+ * gets the very same font files as the new site: same families, weights and
+ * unicode ranges, only served from the build output.
+ */
+const FONT_HOST = "https://fonts.gstatic.com/__rotana__/";
+let fontCss: string | undefined;
+
+async function useSameFontFiles(page: Page, baseURL: string) {
+  if (!fontCss) {
+    const html = await (await fetch(baseURL)).text();
+    const faces = html.match(/@font-face\{[^}]*\}/g) ?? [];
+    fontCss = faces
+      .filter((f) => /font-family:"?(Cormorant Garamond|Jost)"?;/.test(f))
+      .map((f) => f.replace(/url\(\/_next\/static\/media\//g, `url(${FONT_HOST}`))
+      .join("\n");
+    if (!fontCss) throw new Error("No @font-face rules found in the new site");
+  }
+  await page.route("https://fonts.googleapis.com/css2**", (route) =>
+    route.fulfill({ body: fontCss!, contentType: "text/css" }),
+  );
+  await page.route(`${FONT_HOST}**`, (route) => {
+    const file = route.request().url().slice(FONT_HOST.length);
+    return route.fulfill({
+      body: readFileSync(path.join(ROOT, ".next/static/media", file)),
+      contentType: "font/woff2",
+      headers: { "access-control-allow-origin": "*" },
+    });
+  });
 }
 
 /** Wait for fonts, then scroll through the page so lazy images load, then back to the top. */
